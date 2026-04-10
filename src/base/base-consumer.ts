@@ -17,21 +17,26 @@ export class BaseConsumer {
 
   @Process()
   async index(job: Job<IndexJobPayload<ObjectLiteral>>) {
-    const jobData = job.data;
-    const operation = jobData.operation;
-    const model = jobData.model || 'unknown';
+    const {
+      operation,
+      model: rawModel,
+      field,
+      entity,
+      repository: payloadRepository,
+    } = job.data;
+    const model = rawModel || 'unknown';
 
     this.logger.log(`Processing job ${job.id} - operation: ${operation}, model: ${model}`);
 
     try {
       if (operation === indexOperations.delete) {
-        const field = jobData.field ?? 'url';
-        const identifier = jobData.entity[field];
+        const identifierField = field ?? 'url';
+        const identifier = entity[identifierField];
 
-        this.logger.debug(`Delete operation - field: ${field}, identifier: ${identifier}`);
+        this.logger.debug(`Delete operation - field: ${identifierField}, identifier: ${identifier}`);
 
         if (identifier === undefined) {
-          throw new Error(`Cannot delete cache entry without identifier field "${field}"`);
+          throw new Error(`Cannot delete cache entry without identifier field "${identifierField}"`);
         }
 
         await this.transformService.delete(identifier as string | number);
@@ -39,7 +44,7 @@ export class BaseConsumer {
       } else if (operation === indexOperations.syncAll) {
         this.logger.log(`SyncAll operation started`);
 
-        const repository = this.repository ?? jobData.repository;
+        const repository = this.repository ?? payloadRepository;
 
         if (!repository) {
           throw new Error(
@@ -51,9 +56,9 @@ export class BaseConsumer {
         const count = await this.transformService.syncAll(repository);
         this.logger.log(`SyncAll operation completed - synced ${count} entities`);
       } else {
-        const identifier = jobData.entity[jobData.field || 'id'];
+        const identifier = entity[field || 'id'];
         this.logger.debug(`Sync operation - identifier: ${identifier}`);
-        await this.transformService.sync(jobData.entity);
+        await this.transformService.sync(entity);
         this.logger.log(`Sync operation completed for identifier: ${identifier}`);
       }
 
