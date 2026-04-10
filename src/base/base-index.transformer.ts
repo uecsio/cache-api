@@ -139,6 +139,10 @@ export class BaseIndexTransformer<
   ): Promise<number> {
     const useStreaming = options?.useStreaming ?? false;
     const findOptions = options?.findOptions;
+
+    this.logger.log('Clearing cache collection before full sync');
+    await this.clear();
+
     const total = await repository.count({
       where: findOptions?.where,
       withDeleted: findOptions?.withDeleted,
