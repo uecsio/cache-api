@@ -1,4 +1,5 @@
 // Base classes
+export * from './base/abstract-cache-mapper';
 export * from './base/base-crud.service';
 export * from './base/base-index.transformer';
 export * from './base/base-queue.service';
