@@ -91,7 +91,6 @@ export class BaseQueueService<TEntity extends ObjectLiteral = ObjectLiteral> {
       operation: indexOperations.syncAll,
       entity: {} as TEntity,
       model: repository.metadata.tableName ?? repository.metadata.name ?? this.model,
-      repository,
     };
 
     return this.queue.add(payload, options);

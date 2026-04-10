@@ -1,6 +1,6 @@
 {
   "name": "@uecsio/cache-api",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A generic NestJS cache module for syncing TypeORM entities to MongoDB",
   "keywords": [
     "nestjs",
@@ -30,32 +30,32 @@
     "clean": "rimraf dist"
   },
   "peerDependencies": {
+    "@nestjs/bull": "^11.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/mongoose": "^11.0.0",
-    "@nestjs/bull": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
     "bull": "^4.0.0",
-    "typeorm": "^0.3.0",
-    "mongoose": "^8.0.0"
+    "mongoose": "^8.0.0",
+    "typeorm": "^0.3.0"
   },
   "devDependencies": {
+    "@nestjs/bull": "^11.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
-    "@nestjs/testing": "^11.0.0",
     "@nestjs/mongoose": "^11.0.0",
-    "@nestjs/bull": "^11.0.4",
+    "@nestjs/testing": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
     "@types/bull": "^4.10.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "bull": "^4.16.5",
     "jest": "^30.0.0",
-    "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3",
-    "typeorm": "^0.3.26",
     "mongoose": "^8.0.0",
-    "rimraf": "^5.0.0"
+    "rimraf": "^5.0.0",
+    "ts-jest": "^29.2.5",
+    "typeorm": "^0.3.28",
+    "typescript": "^5.9.3"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -75,4 +75,3 @@
     "testEnvironment": "node"
   }
 }
-

@@ -1,6 +1,12 @@
 # Compiled output
 /dist
 /build
+.vscode
+.gitignore
+.npmignore
+.prettierrc
+.prettierignore
+.prettierignore
 *.js
 *.js.map
 *.d.ts
