@@ -12,13 +12,19 @@ import { Document } from 'mongoose';
 export interface ICacheMapper<TEntity, TCache extends Document> {
   /**
    * Map a single entity to a cache document.
+   * Implementations may return a Promise when mapping requires async work (e.g. loading relations).
    */
-  map(entity: TEntity): Partial<TCache>;
+  map(
+    entity: TEntity,
+  ): Partial<TCache> | Promise<Partial<TCache>>;
 
   /**
    * Map multiple entities to cache documents.
+   * Implementations may return a Promise when mapping requires async work.
    */
-  mapMany(entities: TEntity[]): Partial<TCache>[];
+  mapMany(
+    entities: TEntity[],
+  ): Partial<TCache>[] | Promise<Partial<TCache>[]>;
 }
 
 /**
@@ -26,7 +32,9 @@ export interface ICacheMapper<TEntity, TCache extends Document> {
  * Kept for backwards compatibility with static-method mapper classes.
  */
 export type StaticCacheMapper<TEntity, TCache extends Document> = {
-  map(entity: TEntity): Partial<TCache>;
-  mapMany(entities: TEntity[]): Partial<TCache>[];
+  map(entity: TEntity): Partial<TCache> | Promise<Partial<TCache>>;
+  mapMany(
+    entities: TEntity[],
+  ): Partial<TCache>[] | Promise<Partial<TCache>[]>;
 };
 

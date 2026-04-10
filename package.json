@@ -54,7 +54,7 @@
     "mongoose": "^8.0.0",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.2.5",
-    "typeorm": "^0.3.26",
+    "typeorm": "^0.3.28",
     "typescript": "^5.9.3"
   },
   "jest": {
