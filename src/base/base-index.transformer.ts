@@ -130,7 +130,7 @@ export class BaseIndexTransformer<
       useStreaming?: boolean;
       batchSize?: number;
       onProgress?: (processed: number, total?: number) => void;
-      /** Used for `count`, batched `find`, and streaming `QueryBuilder` (where/order only). */
+      /** Used for `count`, batched `find`, and streaming `QueryBuilder`. */
       findOptions?: Pick<
         FindManyOptions<TEntity>,
         'where' | 'order' | 'relations' | 'select' | 'withDeleted'
@@ -176,30 +176,28 @@ export class BaseIndexTransformer<
    */
   private buildStreamQueryBuilder(
     repository: Repository<TEntity>,
-    findOptions?: Pick<FindManyOptions<TEntity>, 'where' | 'order'>,
+    findOptions?: Pick<
+      FindManyOptions<TEntity>,
+      'where' | 'order' | 'relations' | 'select' | 'withDeleted'
+    >,
   ): SelectQueryBuilder<TEntity> {
     const alias = repository.metadata.tableName;
     const qb = repository.createQueryBuilder(alias);
 
-    if (findOptions?.where) {
-      qb.where(findOptions.where as ObjectLiteral);
+    if (findOptions) {
+      qb.setFindOptions({
+        where: findOptions.where,
+        relations: findOptions.relations,
+        select: findOptions.select,
+        withDeleted: findOptions.withDeleted,
+        order: findOptions.order,
+      });
     }
 
     const order = findOptions?.order as
       | Record<string, 'ASC' | 'DESC'>
       | undefined;
-    if (order && typeof order === 'object' && !Array.isArray(order)) {
-      const keys = Object.keys(order);
-      if (keys.length > 0) {
-        qb.orderBy(`${alias}.${keys[0]}`, order[keys[0]]);
-        for (let i = 1; i < keys.length; i++) {
-          const key = keys[i];
-          qb.addOrderBy(`${alias}.${key}`, order[key]);
-        }
-      } else {
-        qb.orderBy(`${alias}.id`, 'ASC');
-      }
-    } else {
+    if (!order || (typeof order === 'object' && Object.keys(order).length === 0)) {
       qb.orderBy(`${alias}.id`, 'ASC');
     }
 
