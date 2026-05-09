@@ -243,6 +243,19 @@ export class BaseIndexTransformer<
   /**
    * Sync using TypeORM query streaming
    */
+  private dealiasRawEntity(
+    rawEntity: Record<string, unknown>,
+    alias: string,
+  ): Record<string, unknown> {
+    const prefix = `${alias}_`;
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(rawEntity)) {
+      const newKey = key.startsWith(prefix) ? key.slice(prefix.length) : key;
+      result[newKey] = rawEntity[key];
+    }
+    return result;
+  }
+
   private async syncWithStreaming(
     repository: Repository<TEntity>,
     total: number,
@@ -261,6 +274,7 @@ export class BaseIndexTransformer<
       );
     }
 
+    const alias = repository.metadata.tableName;
     const qb = this.buildStreamQueryBuilder(repository, findOptions);
     const stream = await qb.stream();
 
@@ -270,7 +284,7 @@ export class BaseIndexTransformer<
 
       stream.on('data', (rawEntity: any) => {
         stream.pause();
-        const entity = rawEntity as TEntity;
+        const entity = this.dealiasRawEntity(rawEntity, alias) as TEntity;
         pipeline = pipeline
           .then(async () => {
             const mapped = await this.resolveMappedEntity(entity);
