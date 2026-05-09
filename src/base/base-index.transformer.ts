@@ -130,7 +130,7 @@ export class BaseIndexTransformer<
       useStreaming?: boolean;
       batchSize?: number;
       onProgress?: (processed: number, total?: number) => void;
-      /** Used for `count`, batched `find`, and streaming `QueryBuilder` (where/order only). */
+      /** Used for `count`, batched `find`, and streaming `QueryBuilder`. */
       findOptions?: Pick<
         FindManyOptions<TEntity>,
         'where' | 'order' | 'relations' | 'select' | 'withDeleted'
@@ -180,30 +180,28 @@ export class BaseIndexTransformer<
    */
   private buildStreamQueryBuilder(
     repository: Repository<TEntity>,
-    findOptions?: Pick<FindManyOptions<TEntity>, 'where' | 'order'>,
+    findOptions?: Pick<
+      FindManyOptions<TEntity>,
+      'where' | 'order' | 'relations' | 'select' | 'withDeleted'
+    >,
   ): SelectQueryBuilder<TEntity> {
     const alias = repository.metadata.tableName;
     const qb = repository.createQueryBuilder(alias);
 
-    if (findOptions?.where) {
-      qb.where(findOptions.where as ObjectLiteral);
+    if (findOptions) {
+      qb.setFindOptions({
+        where: findOptions.where,
+        relations: findOptions.relations,
+        select: findOptions.select,
+        withDeleted: findOptions.withDeleted,
+        order: findOptions.order,
+      });
     }
 
     const order = findOptions?.order as
       | Record<string, 'ASC' | 'DESC'>
       | undefined;
-    if (order && typeof order === 'object' && !Array.isArray(order)) {
-      const keys = Object.keys(order);
-      if (keys.length > 0) {
-        qb.orderBy(`${alias}.${keys[0]}`, order[keys[0]]);
-        for (let i = 1; i < keys.length; i++) {
-          const key = keys[i];
-          qb.addOrderBy(`${alias}.${key}`, order[key]);
-        }
-      } else {
-        qb.orderBy(`${alias}.id`, 'ASC');
-      }
-    } else {
+    if (!order || (typeof order === 'object' && Object.keys(order).length === 0)) {
       qb.orderBy(`${alias}.id`, 'ASC');
     }
 
@@ -249,6 +247,19 @@ export class BaseIndexTransformer<
   /**
    * Sync using TypeORM query streaming
    */
+  private dealiasRawEntity(
+    rawEntity: Record<string, unknown>,
+    alias: string,
+  ): Record<string, unknown> {
+    const prefix = `${alias}_`;
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(rawEntity)) {
+      const newKey = key.startsWith(prefix) ? key.slice(prefix.length) : key;
+      result[newKey] = rawEntity[key];
+    }
+    return result;
+  }
+
   private async syncWithStreaming(
     repository: Repository<TEntity>,
     total: number,
@@ -267,6 +278,7 @@ export class BaseIndexTransformer<
       );
     }
 
+    const alias = repository.metadata.tableName;
     const qb = this.buildStreamQueryBuilder(repository, findOptions);
     const stream = await qb.stream();
 
@@ -276,7 +288,7 @@ export class BaseIndexTransformer<
 
       stream.on('data', (rawEntity: any) => {
         stream.pause();
-        const entity = rawEntity as TEntity;
+        const entity = this.dealiasRawEntity(rawEntity, alias) as TEntity;
         pipeline = pipeline
           .then(async () => {
             const mapped = await this.resolveMappedEntity(entity);
